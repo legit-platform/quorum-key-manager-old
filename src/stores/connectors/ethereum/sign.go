@@ -50,6 +50,18 @@ func (c Connector) SignMessage(ctx context.Context, addr common.Address, data []
 	return signature, nil
 }
 
+func (c Connector) SignTypedDataHash(ctx context.Context, addr common.Address, typedDataHash []byte) ([]byte, error) {
+	logger := c.logger.With("address", addr)
+	
+	signature, err := c.signHomestead(ctx, addr, typedDataHash)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debug("message signed successfully (eip-191)")
+	return signature, nil
+}
+
 func (c Connector) SignTypedData(ctx context.Context, addr common.Address, typedData *core.TypedData) ([]byte, error) {
 	logger := c.logger.With("address", addr.Hex())
 

@@ -53,6 +53,9 @@ type EthStore interface {
 	// SignMessage signs EIP-191 formatted data using the specified Ethereum account
 	SignMessage(ctx context.Context, addr common.Address, data []byte) ([]byte, error)
 
+	// SignTypedDataHash signs EIP-712 formatted data using the specified Ethereum account
+	SignTypedDataHash(ctx context.Context, addr common.Address, typedDataHash []byte) ([]byte, error)
+
 	// SignTypedData signs EIP-712 formatted data using the specified Ethereum account
 	SignTypedData(ctx context.Context, addr common.Address, typedData *core.TypedData) ([]byte, error)
 

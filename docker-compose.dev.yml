@@ -61,10 +61,11 @@ services:
     depends_on:
       - migration
     networks:
-      - quorum
-      - besu
-      - hashicorp
-      - qkm
+      - default
+      # - quorum
+      # - besu
+      # - hashicorp
+      # - qkm
     command: run
     restart: "on-failure"
     volumes:
@@ -109,6 +110,9 @@ networks:
   qkm:
     external:
       name: deps_qkm
+  default: 
+    external: 
+      name: quorum-common
 
 volumes:
   hashicorp-token:

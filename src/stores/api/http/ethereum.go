@@ -43,6 +43,7 @@ func (h *EthHandler) Register(r *mux.Router) {
 	r.Methods(http.MethodPost).Path("/{address}/sign-quorum-private-transaction").HandlerFunc(h.signPrivateTransaction)
 	r.Methods(http.MethodPost).Path("/{address}/sign-eea-transaction").HandlerFunc(h.signEEATransaction)
 	r.Methods(http.MethodPost).Path("/{address}/sign-typed-data").HandlerFunc(h.signTypedData)
+	r.Methods(http.MethodPost).Path("/{address}/sign-typed-data-hash").HandlerFunc(h.SignTypedDataHash)
 	r.Methods(http.MethodPost).Path("/{address}/sign-message").HandlerFunc(h.signMessage)
 	r.Methods(http.MethodPut).Path("/{address}/restore").HandlerFunc(h.restore)
 	r.Methods(http.MethodPatch).Path("/{address}").HandlerFunc(h.update)
@@ -225,8 +226,54 @@ func (h *EthHandler) signMessage(rw http.ResponseWriter, request *http.Request) 
 		infrahttp.WriteHTTPErrorResponse(rw, err)
 		return
 	}
+	
+  fmt.Println("My wayyyyyyyyyyyyyyy")
 
 	signature, err := ethStore.SignMessage(ctx, getAddress(request), signPayloadReq.Message)
+	if err != nil {
+		infrahttp.WriteHTTPErrorResponse(rw, err)
+		return
+	}
+
+	_, err = rw.Write([]byte(hexutil.Encode(signature)))
+	if err != nil {
+		infrahttp.WriteHTTPErrorResponse(rw, err)
+		return
+	}
+}
+
+// @Summary      Sign Typed Data Hash (EIP-712)
+// @Description  Sign Typed Data, following EIP-712, using identified Ethereum Account
+// @Tags         Ethereum
+// @Accept       json
+// @Produce      plain
+// @Param        storeName  path      string                      true  "Store ID"
+// @Param        address    path      string                      true  "Ethereum address"
+// @Param        request    body      types.SignTypedDataRequest  true  "Sign typed data request"
+// @Success      200        {string}  string                      "Signed typed data signature"
+// @Failure      400        {object}  infrahttp.ErrorResponse     "Invalid request format"
+// @Failure      401        {object}  infrahttp.ErrorResponse     "Unauthorized"
+// @Failure      403        {object}  infrahttp.ErrorResponse     "Forbidden"
+// @Failure      404        {object}  infrahttp.ErrorResponse     "Store/Account not found"
+// @Failure      500        {object}  infrahttp.ErrorResponse     "Internal server error"
+// @Router       /stores/{storeName}/ethereum/{address}/sign-typed-data-hash [post]
+func (h *EthHandler) SignTypedDataHash(rw http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+
+	signPayloadReq := &types.SignTypedDataHashRequest{}
+	err := jsonutils.UnmarshalBody(request.Body, signPayloadReq)
+	if err != nil {
+		infrahttp.WriteHTTPErrorResponse(rw, errors.InvalidFormatError(err.Error()))
+		return
+	}
+
+	ethStore, err := h.stores.Ethereum(ctx, StoreNameFromContext(ctx), auth.UserInfoFromContext(ctx))
+	if err != nil {
+		infrahttp.WriteHTTPErrorResponse(rw, err)
+		return
+	}
+	
+	signature, err := ethStore.SignTypedDataHash(ctx, getAddress(request), signPayloadReq.Message)
 	if err != nil {
 		infrahttp.WriteHTTPErrorResponse(rw, err)
 		return

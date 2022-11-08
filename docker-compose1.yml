@@ -27,10 +27,6 @@ x-default-variables: &default-variables
   AUTH_TLS_CA: ${AUTH_TLS_CA-}
   AUTH_API_KEY_FILE: ${AUTH_API_KEY_FILE-}
 
-x-container-common: &container-common
-  image: golang:1.16-buster
-  entrypoint: /bin/main
-
 services:
   postgres:
     image: postgres:13.4-alpine
@@ -48,21 +44,16 @@ services:
     restart: "on-failure"
 
   migration:
-    <<: *container-common
+    image: consensys/quorum-key-manager:latest
     environment:
       <<: *default-variables
     command: migrate up
     restart: "on-failure"
     depends_on:
       - postgres
-    volumes:
-      - ./build/bin/key-manager:/bin/main:ro
-      - ./deps/migrations:/migrations:ro
-      - ./deps/config/certificates:/certificates
-      - ./deps/config/ca:/ca:ro
 
   key-manager:
-    <<: *container-common
+    image: consensys/quorum-key-manager:latest
     environment:
       <<: *default-variables
       MANIFEST_PATH: ${MANIFEST_PATH-/manifests}
@@ -73,25 +64,8 @@ services:
       - migration
     command: run
     volumes:
-      - ./build/bin/key-manager:/bin/main:ro
-      - ./deps/config/manifests:/manifests:ro
-      - ./deps/config/certificates:/certificates:ro
-      - ./deps/config/ca:/ca:ro
-      - ./deps/config/apikey:/apikey:ro
-      - ./deps/config/oidc:/oidc:ro
+      - ${HOST_MANIFEST_PATH-./deps/config/manifests}:/manifests:ro
     restart: "on-failure"
-
-  sync:
-    <<: *container-common
-    networks:
-      - default
-    environment:
-      <<: *default-variables
-      SYNC_STORE_NAME: ${SYNC_STORE_NAME-}
-    volumes:
-      - ./build/bin/key-manager:/bin/main:ro
-      - ./deps/config/manifests:/manifests:ro
-    command: sync ${SYNC_STORE_TYPE-secrets}
 
 volumes:
   db-data-api:
