@@ -13,7 +13,7 @@
   name: hashicorp-vault
   specs: 
     mount_point: quorum
-    address: http://localhost:8200
+    address: http://127.0.0.1:8200
 #    token: s.3XAjqLVketOmixSvyUcVbNjs
     token: DevVaultToken
 #    token_path: /vault/token/.root
