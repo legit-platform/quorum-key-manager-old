@@ -1,0 +1,66 @@
+# AWS KMS secret store manifest
+#- kind: Vault
+#  type: aws
+#  name: aws-kms-vault
+#  specs:
+#    access_id: AKIA3NFVINTXLUFP33LA
+#    secret_key: 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
+#    region: ap-south-1
+#    debug: true
+
+- kind: Vault
+  type: hashicorp
+  name: hashicorp-vault
+  specs: 
+    mount_point: quorum
+    address: http://localhost:8200
+#    token: s.3XAjqLVketOmixSvyUcVbNjs
+    token: DevVaultToken
+#    token_path: /vault/token/.root
+    namespace: ''
+#    namespace: my-secret
+
+- kind: Store
+  type: secret
+#  name: aws-kms-secrets
+  name: hashicorp-secret
+  specs:
+#    vault: aws-kms-vault
+    vault: hashicorp-vault
+#    key_store:  aws-kms-keys
+
+- kind: Store
+  type: key
+#  name: aws-kms-keys
+  name: hashicorp-keys
+  specs:
+#    vault: aws-kms-vault
+    vault: hashicorp-vault
+#    secret_store: hashicorp-secret
+#    secret_store: aws-kms-secrets
+
+- kind: Store
+  type: ethereum
+  name: eth-accounts
+  specs:
+#    key_store: aws-kms-keys
+    key_store: hashicorp-keys
+
+- kind: Store
+  type: ethereum
+  name: eth-accounts1
+  specs:
+#    key_store: aws-kms-keys
+    key_store: hashicorp-keys
+
+#- kind: Store
+#  type: local-keys
+#  name: my-key-store
+#  specs:
+#    secret_store: hashicorp-secret
+
+- kind: Node
+  name: infura-node
+  specs:
+    rpc:
+      addr: https://eth-goerli.g.alchemy.com/v2/NazHWAZHwwVkim06LfZvjohuzpgnmC_m
